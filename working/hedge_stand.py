@@ -20,7 +20,6 @@ from dotenv import load_dotenv
 
 from strategy_ploter import  plot_position_return_decomposition
 
-%matplotlib inline
 
 # logger = logging.getLogger()
 # logger.setLevel(logging.INFO) 
