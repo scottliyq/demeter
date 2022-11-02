@@ -103,6 +103,8 @@ class Downloader(cmd.Cmd):
         start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.param.auth_file
+        print(f"{self.param.chain},{pool_contract_address},{start_date},{end_date},{self.param.source},{self.param.save_path}")
+
         downloader.download_by_day(self.param.chain,
                                    pool_contract_address,
                                    start_date,
