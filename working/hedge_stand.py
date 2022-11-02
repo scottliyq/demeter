@@ -405,18 +405,16 @@ if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
     DATE_START = date(2022, 10, 29)
     DATE_END = date(2022, 10, 30)
-    # profit  = backtest(120,30,80)
-
+    profit  = backtest(120,30,80)
+    print(profit)
     # profit
-    opt = optunity.maximize(backtest,  num_evals=1,solver_name='particle swarm', a=[105, 125], hedge_spread_split=[20, 50],hedge_spread_rate=[50, 100])
+    # opt = optunity.maximize(backtest,  num_evals=1,solver_name='particle swarm', a=[105, 125], hedge_spread_split=[20, 50],hedge_spread_rate=[50, 100])
 
 
 
     ########################################
     # 优化完成，得到最优参数结果
-    optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters:a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}"
-    # print('a = %.2f' % optimal_pars['a'])
-    # print('hedge_spread_split = %.2f' % optimal_pars['hedge_spread_split'])
-    # print('hedge_spread_rate = %.2f' % optimal_pars['hedge_spread_rate'])
-    send_notice('CEX_Notify',result)
+    # optimal_pars, details, _ = opt
+    # result  = f"Optimal Parameters:a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}"
+
+    # send_notice('CEX_Notify',result)
