@@ -200,9 +200,12 @@ class HedgeST(dt.Strategy):
         P0 = self.broker.pool_status.price
 
         status: AccountStatus = self.broker.get_account_status(P0)
+        prices = self.data.closeTick.map(lambda x: self.broker.tick_to_price(x))
         if self.alpha != -1:
-            prices = self.data.closeTick.map(lambda x: self.broker.tick_to_price(x))
+           
             self._add_column("ema", ema(prices,self.alpha))
+        else:
+            self._add_column("ema", ema(prices,0.05))
         
         future_init_net_value = status.net_value * Decimal(0.2)
         
