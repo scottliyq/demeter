@@ -31,11 +31,13 @@ class AddLpByMa(Strategy):
         if row_data.timestamp.minute != 0:
             return
         if len(self.broker.positions) > 0:
+            print('remove lp')
             keys = list(self.broker.positions.keys())
             for k in keys:
                 self.remove_liquidity(k)
             self.rebalance(row_data.price)
         ma_price = row_data.ma5 if row_data.ma5 > 0 else row_data.price
+        print('add lp', ma_price)
         self.add_liquidity(ma_price - self.price_width,
                            ma_price + self.price_width)
 
@@ -59,7 +61,7 @@ if __name__ == "__main__":
                               "0x45dda9cb7c25131df268515131f647d726f50608",
                               date(2022, 8, 5),
                               date(2022, 8, 20))
-    runner_instance.run(enable_notify=False)
+    runner_instance.run(enable_notify=True)
     print(runner_instance.final_status.net_value)
 
     runner_instance.broker.get_account_status(runner_instance.final_status.price)

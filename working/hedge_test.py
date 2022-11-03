@@ -9,11 +9,10 @@ import numpy as np
 import pandas as pd
 from decimal import Decimal
 import requests
-import optunity
-import optunity.metrics
 
-import os
-from dotenv import load_dotenv
+
+
+
 
 # import logging 
 # from logging import handlers
@@ -153,7 +152,7 @@ class HedgeST(dt.Strategy):
 
     def __init__(self, a, hedge_spread_split,hedge_spread_rate,trade_symbol='ETH'):
         super().__init__()
-        self.a = Decimal(a)
+        self.a = a
         self.trade_symbol = trade_symbol
         self.init_quote_number = 0
         self.hedge_spread_split = hedge_spread_split
@@ -186,11 +185,12 @@ class HedgeST(dt.Strategy):
         # print(P0)
         self.down_price = P0 / self.a
         self.up_price = P0 * self.a
-        print(f"prepare to add LP: rate:{self.a} price:{P0} down:{self.down_price} up:{self.up_price} init symbol amount:{self.init_total_symbol},init usdc amount:{self.init_total_usdc}")
+        print(f"===============> prepare to add LP: rate:{self.a} price:{P0} down:{self.down_price} up:{self.up_price} init symbol amount:{self.init_total_symbol},init usdc amount:{self.init_total_usdc}")
         self.add_liquidity(self.down_price, self.up_price)
 
-        print("eth_value",self.broker.quote_asset.balance, "usdc value", self.broker.base_asset.balance)
-        account_status = self.broker.get_account_status()
+        account_status = self.broker.get_account_status(P0)
+        print("eth_value",account_status.quote_in_position, "usdc value", account_status.base_in_position)
+
         self.init_quote_number = account_status.quote_in_position
 
         self.hedge_spread = self.init_quote_number / self.hedge_spread_split 
@@ -241,15 +241,15 @@ class HedgeST(dt.Strategy):
 
         e.Update(row_data.timestamp,row_data.price)
 
-        current_amount = self.broker.get_account_status().quote_in_position
-        usdc_amount = self.broker.get_account_status().base_in_position
+        current_amount = self.broker.get_account_status(row_data.price).quote_in_position
+        usdc_amount = self.broker.get_account_status(row_data.price).base_in_position
         future_amount = self.e.account[self.trade_symbol]['amount']
         spread = self.init_quote_number*2 -current_amount - future_amount
         symbol = self.trade_symbol
         price = row_data.price
 
         # todo 处理价格跑出范围
-        # print(f"====>rowdata.low:{row_data.low} rowdata.high:{row_data.high} rowdata.price:{row_data.price} rowdata.timestamp:{row_data.timestamp}")
+        print(f"====>current_amount:{current_amount} usdc_amount:{usdc_amount} rowdata.price:{row_data.price} rowdata.timestamp:{row_data.timestamp}")
         # todo row_data.low 大于 row_data.high
         if row_data.high < self.down_price:
             print(f"====>high:{row_data.high}, self.down_price:{self.down_price}")
@@ -334,46 +334,13 @@ class HedgeST(dt.Strategy):
         self.hedge_rebalance(price, quote_amount)
 
 
-def send_notice(event_name, text):
 
-    load_dotenv()
-
-    ifttt_key = os.getenv('IFTTT_KEY')
-
-    
-    ifttt_key_funding_notify = ifttt_key
-    key = ifttt_key_funding_notify
-    url = "https://maker.ifttt.com/trigger/"+event_name+"/with/key/"+key+""
-    payload = "{\n    \"value1\": \""+text+"\"\n}"
-    headers = {
-    'Content-Type': "application/json",
-    'User-Agent': "PostmanRuntime/7.15.0",
-    'Accept': "*/*",
-    'Cache-Control': "no-cache",
-    'Postman-Token': "a9477d0f-08ee-4960-b6f8-9fd85dc0d5cc,d376ec80-54e1-450a-8215-952ea91b01dd",
-    'Host': "maker.ifttt.com",
-    'accept-encoding': "gzip, deflate",
-    'content-length': "63",
-    'Connection': "keep-alive",
-    'cache-control': "no-cache"
-    }
- 
-    requests.request("POST", url, data=payload.encode('utf-8'), headers=headers)
 
 # if __name__ == "__main__":
 # a[105,125],hedge_spread_split[20,50], hedge_spread_rate[50,100]
 def backtest(a, hedge_spread_split,hedge_spread_rate):
     global RUNNING_TIME
     print(f"==================running time {RUNNING_TIME}==================")
-
-    decimal_a = Decimal(a).quantize(Decimal('0.00'))
-    decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
-    decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
-
-    print(f"{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',f"{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
-
     RUNNING_TIME +=1
     pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 
@@ -388,29 +355,27 @@ def backtest(a, hedge_spread_split,hedge_spread_rate):
 
     runner_instance = Runner(pool)
     # runner_instance.enable_notify = False
-    runner_instance.strategy = HedgeST(decimal_a,decimal_hedge_spread_split,decimal_hedge_spread_rate)
+    runner_instance.strategy = HedgeST(Decimal(a)/Decimal(100),Decimal(hedge_spread_split)/Decimal(10),Decimal(hedge_spread_rate)/Decimal(100))
     runner_instance.set_assets([Asset(usdc, 10000)])
-    runner_instance.data_path = "../demeter/data"
+    runner_instance.data_path = "../demeter/test_data"
     runner_instance.load_data(ChainType.Ethereum.name,
                                 pool_id_tie500,
                                 DATE_START,
                                DATE_END)
-    runner_instance.run(enable_notify=False)
+    runner_instance.run(enable_notify=True)
 
     df_status = pd.DataFrame(runner_instance.account_status_list)
-
-    total_net_value = runner_instance.final_status.net_value
+    final_status = runner_instance.final_status
+    # print(final_status)
+    total_net_value = runner_instance.final_status.net_value + runner_instance.final_status.base_uncollected + runner_instance.final_status.quote_uncollected * runner_instance.final_status.price
     
     final_total_usdc_value = total_net_value + runner_instance.strategy.e.df['total'].iloc[-1]
     
     final_price = runner_instance.final_status.price
-    print(final_total_usdc_value)
     if NET_VALUE_BASE == 'USDC':
-        print(final_total_usdc_value)
         return float(final_total_usdc_value)
         # profit_rate_usdc = profit_usdc / runner_instance.strategy.init_total_usdc
     else:
-        print(float(final_total_usdc_value / final_price))
         return float(final_total_usdc_value / final_price)
         # profit_rate_eth = profit_eth / runner_instance.strategy.init_total_symbol
 # df_status
@@ -418,21 +383,19 @@ def backtest(a, hedge_spread_split,hedge_spread_rate):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 10, 30)
-    DATE_END = date(2022, 10, 31)
+    DATE_START = date(2022, 11, 1)
+    DATE_END = date(2022, 11, 1)
     RUNNING_TIME = 1
-    SEND_NOTICE = False
-    # profit  = backtest(120,30,80)
-    # print(profit)
+    profit  = backtest(120,20,80)
+    print(profit)
     # profit
-    opt = optunity.maximize(backtest,  num_evals=2,solver_name='particle swarm', a=[1.12, 1.25], hedge_spread_split=[2, 3],hedge_spread_rate=[0.6, 1])
+    # opt = optunity.maximize(backtest,  num_evals=200,solver_name='particle swarm', a=[110, 125], hedge_spread_split=[20, 40],hedge_spread_rate=[60, 100])
 
 
 
     ########################################
     # 优化完成，得到最优参数结果
-    optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters:a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}"
-    print(result)
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',result)
+    # optimal_pars, details, _ = opt
+    # result  = f"Optimal Parameters:a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}"
+    # print(result)
+    # send_notice('CEX_Notify',result)
