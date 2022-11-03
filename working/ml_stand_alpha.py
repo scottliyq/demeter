@@ -19,7 +19,7 @@ def backtest_alpha(alpha):
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
-    notice = f"{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}"
+    notice = f"alpha backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}"
 
     print(notice)
     if SEND_NOTICE:

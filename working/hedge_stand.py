@@ -412,7 +412,7 @@ def backtest(a, hedge_spread_split,hedge_spread_rate):
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
-    print(f"{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
+    print(f"backtest spread:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
     if SEND_NOTICE:
         send_notice('CEX_Notify',f"{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
 
