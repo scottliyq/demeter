@@ -7,9 +7,9 @@ import optunity.metrics
 from decimal import Decimal
 
 
-def backtest_standard(alpha):
+def backtest_alpha(alpha):
     global RUNNING_TIME
-    print(f"==================Standard running time {RUNNING_TIME}==================")
+    print(f"==================ema alpha running time {RUNNING_TIME}==================")
 
     a = 1.2
     hedge_spread_split = 3
@@ -19,9 +19,13 @@ def backtest_standard(alpha):
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
+    notice = f"alpha backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}"
 
+    print(notice)
+    if SEND_NOTICE:
+        send_notice('CEX_Notify',notice)
 
-
+    RUNNING_TIME +=1
     pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 
     pool_id_tie3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
@@ -46,18 +50,9 @@ def backtest_standard(alpha):
 
     hedge_count = runner_instance.strategy.hedge_count
 
+    print(f"hedge count:{hedge_count}")
 
-    notice = f"standard compare backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}, hedge count:{hedge_count}"
-    print(notice)
-
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',notice)
-
-    RUNNING_TIME +=1
-    
     return -1*hedge_count
-
-
 
     # df_status = pd.DataFrame(runner_instance.account_status_list)
 
@@ -90,7 +85,7 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_standard,  num_evals=200,solver_name='particle swarm', alpha=[0.005, 0.1])
+    opt = optunity.maximize(backtest_alpha,  num_evals=200,solver_name='particle swarm', alpha=[0.005, 0.1])
 
 
 

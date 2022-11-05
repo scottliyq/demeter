@@ -7,25 +7,21 @@ import optunity.metrics
 from decimal import Decimal
 
 
-def backtest_alpha(alpha):
+def backtest_standard(alpha):
     global RUNNING_TIME
-    print(f"==================ema alpha running time {RUNNING_TIME}==================")
+    print(f"==================Standard running time {RUNNING_TIME}==================")
 
-    a = 1.2
+    a = 1.25
     hedge_spread_split = 3
-    hedge_spread_rate = 0.8
+    hedge_spread_rate = 1
 
     decimal_a = Decimal(a).quantize(Decimal('0.00'))
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
-    notice = f"alpha backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}"
 
-    print(notice)
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',notice)
 
-    RUNNING_TIME +=1
+
     pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 
     pool_id_tie3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
@@ -50,9 +46,18 @@ def backtest_alpha(alpha):
 
     hedge_count = runner_instance.strategy.hedge_count
 
-    print(f"hedge count:{hedge_count}")
+
+    notice = f"standard compare backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}, hedge count:{hedge_count}"
+    print(notice)
+
+    if SEND_NOTICE:
+        send_notice('CEX_Notify',notice)
+
+    RUNNING_TIME +=1
 
     return -1*hedge_count
+
+
 
     # df_status = pd.DataFrame(runner_instance.account_status_list)
 
@@ -77,7 +82,7 @@ def backtest_alpha(alpha):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 9, 1)
+    DATE_START = date(2022, 7, 1)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
@@ -85,14 +90,14 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_alpha,  num_evals=200,solver_name='particle swarm', alpha=[0.005, 0.1])
+    opt = optunity.maximize(backtest_standard,  num_evals=200,solver_name='particle swarm', alpha=[0.005, 0.1])
 
 
 
     # ########################################
     # # 优化完成，得到最优参数结果
     optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters:alpha={optimal_pars['alpha']}"
+    result  = f"Optimal Parameters(alpha):alpha={optimal_pars['alpha']}"
     print(result)
     if SEND_NOTICE:
         send_notice('CEX_Notify',result)
