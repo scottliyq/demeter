@@ -77,7 +77,7 @@ def backtest_standard(alpha):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 10, 30)
+    DATE_START = date(2022, 9, 1)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
