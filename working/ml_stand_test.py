@@ -11,7 +11,7 @@ def backtest_standard(alpha):
     global RUNNING_TIME
     print(f"==================Standard running time {RUNNING_TIME}==================")
 
-    a = 1.2
+    a = 1.10
     hedge_spread_split = 3
     hedge_spread_rate = 0.8
 
@@ -77,7 +77,7 @@ def backtest_standard(alpha):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 10, 30)
+    DATE_START = date(2022, 9, 1)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_standard,  num_evals=10,solver_name='particle swarm', alpha=[0.005, 0.1])
+    opt = optunity.maximize(backtest_standard,  num_evals=5,solver_name='particle swarm', alpha=[0.005, 0.1])
 
 
 
