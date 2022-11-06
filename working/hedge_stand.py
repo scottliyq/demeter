@@ -296,8 +296,9 @@ class HedgeST(dt.Strategy):
                 trade_amount = abs(self.init_quote_number*2 - amount_down - future_amount)
                 if trade_amount >= self.MIN_TRADE_AMOUNT:
                     trade_price = self.down_price
+                    self.hedge_count += 1
                     e.Sell(symbol, trade_price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                    print(f"{row_data.timestamp } none ema=>last hedge sell {symbol}, trade_price:{trade_price}, trade_amount: {trade_amount}, current_amount: {current_amount}")
+                    print(f"{row_data.timestamp } none ema=>last hedge sell {symbol}, trade_price:{trade_price}, ema:{row_data.ema},trade_amount: {trade_amount}, current_amount: {current_amount}, hedge count:{self.hedge_count}")
             elif row_data.low > self.up_price:
                 print(f"====>low:{row_data.low}, self.up_price:{self.up_price}")
 
@@ -305,9 +306,9 @@ class HedgeST(dt.Strategy):
                 trade_amount = self.init_quote_number*2 - future_amount
                 if trade_amount >= self.MIN_TRADE_AMOUNT:
                     trade_price = self.up_price
-
+                    self.hedge_count += 1
                     e.Buy(symbol, trade_price, abs(trade_amount), round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                    print(f"{row_data.timestamp } none ema=>last hedge buy {symbol}, {trade_price}, trade_amount: {trade_amount}, current_amount: {current_amount}")
+                    print(f"{row_data.timestamp } none ema=>last hedge buy {symbol},trade_price: {trade_price},ema:{row_data.ema}, trade_amount: {trade_amount}, current_amount: {current_amount},hedge count:{self.hedge_count}")
  
         if current_amount == 0 or usdc_amount == 0:
             # out of range, hedge at first
@@ -317,12 +318,12 @@ class HedgeST(dt.Strategy):
                     self.hedge_count += 1
                     trade_amount = spread
                     e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                    print(f"{row_data.timestamp} ema:{row_data.ema} => last hedge buy {symbol}, {price}, {trade_amount}, {round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2)}")
+                    print(f"{row_data.timestamp} ema:{row_data.ema} => last hedge buy {symbol}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
                 elif spread < -1 * self.MIN_TRADE_AMOUNT:
                     self.hedge_count += 1
                     trade_amount = spread * -1
                     e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                    print(f"{row_data.timestamp } ema:{row_data.ema} => last hedge sell {symbol}, {price}, {trade_amount}, {round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2)}")
+                    print(f"{row_data.timestamp } ema:{row_data.ema} => last hedge sell {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
 
 
             if len(self.broker.positions) > 0:
@@ -341,12 +342,12 @@ class HedgeST(dt.Strategy):
                 self.hedge_count += 1
                 trade_amount = self.hedge_amount
                 e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                print(f"{row_data.timestamp} hedge buy {symbol}, trade price:{price},ema:{row_data.ema}, trade amount:{trade_amount}, profit: {round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2)}")
+                print(f"{row_data.timestamp} hedge buy {symbol}, trade price:{price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
             elif Decimal(-1)*self.hedge_spread >= spread:
                 self.hedge_count += 1
                 trade_amount = self.hedge_amount
                 e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                print(f"{row_data.timestamp } hedge sell {symbol},trade price: {price},ema:{row_data.ema},trade amount: {trade_amount}, profit: {round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2)}")
+                print(f"{row_data.timestamp } hedge sell {symbol},trade price: {price},ema:{row_data.ema},trade amount: {trade_amount}, hedge count:{self.hedge_count}")
 
         # print(f"spread:{spread}, {self.hedge_spread}")
         # print(f"spread: {spread},{self.init_quote_number},{current_amount},{future_amount}")
@@ -463,7 +464,7 @@ def backtest(a, hedge_spread_split,hedge_spread_rate):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 8, 1)
+    DATE_START = date(2022, 10, 15)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
