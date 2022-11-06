@@ -44,14 +44,24 @@ def backtest_standard(alpha):
                                DATE_END)
     runner_instance.run(enable_notify=False)
 
+
     hedge_count = runner_instance.strategy.hedge_count
 
+    total_net_value = runner_instance.final_status.net_value
+    
+    final_total_usdc_value = round(total_net_value + runner_instance.strategy.e.df['total'].iloc[-1],3)
+    
+    final_price = runner_instance.final_status.price
 
-    notice = f"standard compare backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}, hedge count:{hedge_count}"
+    final_total_eth_value = round(final_total_usdc_value / final_price,3)
+
+    notice = f"alpha :{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},\n"
+    result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
     print(notice)
-
+    print(result)
     if SEND_NOTICE:
-        send_notice('CEX_Notify',notice)
+        send_notice('CEX_Notify',notice + result)
+
 
     RUNNING_TIME +=1
 
