@@ -44,12 +44,11 @@ def backtest_alpha(alpha):
 
     hedge_count = runner_instance.strategy.hedge_count
 
-    print(f"hedge count:{hedge_count}")
-    notice = f"benchmark backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}"
-
-    print(notice)
+    notice = f"backtest spread:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha}"
+    result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"
+  
     if SEND_NOTICE:
-        send_notice('CEX_Notify',notice)
+        send_notice('CEX_Notify',notice + result)
 
     RUNNING_TIME +=1
     return -1*hedge_count
