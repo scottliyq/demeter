@@ -73,14 +73,14 @@ def backtest_spread_alpha(a, hedge_spread_split,hedge_spread_rate,alpha):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 9, 1)
-    DATE_END = date(2022, 10, 31)
+    DATE_START = date(2022, 4, 1)
+    DATE_END = date(2022, 6, 30)
     RUNNING_TIME = 1
     SEND_NOTICE = True
     # profit  = backtest(120,30,80)
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_spread_alpha,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.25], hedge_spread_split=[2, 3],hedge_spread_rate=[0.7, 1],alpha=[0.008, 0.08])
+    opt = optunity.maximize(backtest_spread_alpha,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2, 3],hedge_spread_rate=[0.7, 1],alpha=[0.008, 0.06])
 
 
 

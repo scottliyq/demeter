@@ -55,7 +55,7 @@ def backtest_standard(alpha):
 
     final_total_eth_value = round(final_total_usdc_value / final_price,3)
 
-    notice = f"alpha :{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},\n"
+    notice = f"alpha:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},\n"
     result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
     print(notice)
     print(result)
@@ -92,7 +92,7 @@ def backtest_standard(alpha):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 7, 1)
+    DATE_START = date(2022, 10, 31)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
