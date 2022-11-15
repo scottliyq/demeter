@@ -22,10 +22,6 @@ def backtest_standard(alpha, ema_max_spread_rate):
     alpha = round(alpha,4)
     ema_max_spread_rate = round(ema_max_spread_rate,4)
 
-    pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
-
-    pool_id_tie3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
-
     eth = TokenInfo(name="eth", decimal=18)
     usdc = TokenInfo(name="usdc", decimal=6)
     pool = PoolBaseInfo(usdc, eth, 0.05, usdc)
@@ -40,7 +36,7 @@ def backtest_standard(alpha, ema_max_spread_rate):
     save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
     runner_instance.data_path = save_path
     runner_instance.load_data(ChainType.Ethereum.name,
-                                pool_id_tie500,
+                                pool_id_1_eth_u_500,
                                 DATE_START,
                                DATE_END)
     runner_instance.run(enable_notify=False)
@@ -57,8 +53,11 @@ def backtest_standard(alpha, ema_max_spread_rate):
 
     final_total_eth_value = round(final_total_usdc_value / final_price,3)
 
-    notice = f"alpha/ema:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpha:{alpha},ema_max_spread_rate:{ema_max_spread_rate}\n"
-    result =f"result:ema_outside_count:{outside_ema_count} hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+    notice = f"ema+alpha:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},ema rate:{ema_max_spread_rate}"
+    result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+
+    # notice = f"alpha+ema:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpha:{alpha},ema_max_spread_rate:{ema_max_spread_rate}\n"
+    # result =f"result:ema_outside_count:{outside_ema_count} hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
     print(notice)
     print(result)
     if SEND_NOTICE:
