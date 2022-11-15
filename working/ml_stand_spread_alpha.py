@@ -6,7 +6,7 @@ import optunity
 import optunity.metrics
 from decimal import Decimal
 import pandas as pd
-
+from load_data import pool_id_1_eth_u_500
 
 def backtest_spread_alpha(a, hedge_spread_split,hedge_spread_rate,alpha):
     global RUNNING_TIME
@@ -32,7 +32,8 @@ def backtest_spread_alpha(a, hedge_spread_split,hedge_spread_rate,alpha):
     # runner_instance.enable_notify = False
     runner_instance.strategy = HedgeST(decimal_a,decimal_hedge_spread_split,decimal_hedge_spread_rate,alpha)
     runner_instance.set_assets([Asset(usdc, 10000)])
-    runner_instance.data_path = "../demeter/data"
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    runner_instance.data_path = save_path
     runner_instance.load_data(ChainType.Ethereum.name,
                                 pool_id_tie500,
                                 DATE_START,
@@ -73,8 +74,10 @@ def backtest_spread_alpha(a, hedge_spread_split,hedge_spread_rate,alpha):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 4, 1)
-    DATE_END = date(2022, 6, 30)
+    str_date_start = '2022-6-30'
+    str_date_end = '2022-6-30'
+    DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
+    DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
     RUNNING_TIME = 1
     SEND_NOTICE = True
     # profit  = backtest(120,30,80)
@@ -87,7 +90,7 @@ if __name__ == "__main__":
     ########################################
     # 优化完成，得到最优参数结果
     optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters(spread,alpha) :a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}, alpha={optimal_pars['alpha']}"
+    result  = f"Optimal Parameters(spread,alpha) :a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}, alpha={optimal_pars['alpha']}, from {str_date_start} to {str_date_end}"
     print(result)
     if SEND_NOTICE:
         send_notice('CEX_Notify',result)

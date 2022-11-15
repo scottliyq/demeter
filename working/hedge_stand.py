@@ -179,9 +179,17 @@ usdc = TokenInfo(name="usdc", decimal=6)
 class HedgeST(dt.Strategy):
     MIN_TRADE_AMOUNT = 0.01
     hedge_count = 0
+    outside_ema_count = 0
+    # ema_max_spread_rate = 0
+    # def set_ema_max_spread_rate(self, ema_max_spread_rate):
+    #     print(f"ema_max_spread_rate: {ema_max_spread_rate}")
+    #     self.ema_max_spread_rate = ema_max_spread_rate
 
-    def __init__(self, a, hedge_spread_split,hedge_spread_rate,alpha=-1,trade_symbol='ETH'):
+    def __init__(self, a, hedge_spread_split,hedge_spread_rate,alpha=-1,ema_max_spread_rate=0,trade_symbol='ETH'):
         super().__init__()
+        notice = f"init parameters: a:{a}, hedge_spread_split:{hedge_spread_split}, hedge_spread_rate:{hedge_spread_rate},alpa:{alpha},ema spread rate:{ema_max_spread_rate}\n"
+        print(notice)
+        self.ema_max_spread_rate = ema_max_spread_rate
         self.a = Decimal(a)
         self.trade_symbol = trade_symbol
         self.init_quote_number = 0
@@ -278,7 +286,16 @@ class HedgeST(dt.Strategy):
 
         price_pos = row_data.price
         if self.alpha != -1:
-            price_pos = Decimal(row_data.ema)
+            # price_pos = Decimal(row_data.ema)
+            # 偏离过大时候使用当前价格替代ema price
+            ema_spread_rate = abs(float(row_data.price) - row_data.ema) / row_data.ema
+            if ema_spread_rate >= self.ema_max_spread_rate:
+                # print(f"price {row_data.price} ema {row_data.ema} too far: ema spread rate: {ema_spread_rate},ema max spread rate:{self.ema_max_spread_rate} use price")
+                self.outside_ema_count +=1
+                price_pos = row_data.price
+            else:
+                price_pos = Decimal(row_data.ema)
+
         current_amount = self.broker.get_account_status(price_pos).quote_in_position
         usdc_amount = self.broker.get_account_status(price_pos).base_in_position
         future_amount = self.e.account[self.trade_symbol]['amount']
@@ -380,7 +397,7 @@ class HedgeST(dt.Strategy):
         self.hedge_rebalance(price, quote_amount)
 
 
-def send_notice(event_name, text):
+def send_notice(event_name, text,text2=""):
 
     load_dotenv()
 
@@ -390,7 +407,7 @@ def send_notice(event_name, text):
     ifttt_key_funding_notify = ifttt_key
     key = ifttt_key_funding_notify
     url = "https://maker.ifttt.com/trigger/"+event_name+"/with/key/"+key+""
-    payload = "{\n    \"value1\": \""+text+"\"\n}"
+    payload = "{\n    \"value1\": \""+text+"\"\n, \"value2\": \""+text2+"\"\n}"
     headers = {
     'Content-Type': "application/json",
     'User-Agent': "PostmanRuntime/7.15.0",
@@ -464,7 +481,7 @@ def backtest(a, hedge_spread_split,hedge_spread_rate):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 10, 15)
+    DATE_START = date(2022, 9, 15)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True

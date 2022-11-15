@@ -8,6 +8,14 @@ from pathlib import Path
 pool_id_1_eth_u_500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 pool_id_1_eth_u_3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
 
+pool_id_matic_eth_u_3000 = '0x0e44ceb592acfc5d3f09d996302eb4c499ff8c10'
+pool_id_matic_eth_u_500 = '0x45dda9cb7c25131df268515131f647d726f50608'
+
+pool_id_arb_eth_u_3000 = '0x17c14d2c404d167802b16c450d3c99f88f2c4f4d'
+pool_id_arb_eth_u_500 = '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
+
+pool_id_op_eth_u_3000 = '0xb589969d38ce76d3d7aa319de7133bc9755fd840'
+pool_id_op_eth_u_500 = '0x85149247691df622eaf1a8bd0cafd40bc45154a9'
 
 # class ChainType(Enum):
 #     Ethereum = 1
@@ -47,7 +55,7 @@ def load(start,end,chain_id,pool_id,save_path):
 # main function
 # python load_data.py -s 2022-11-2 -e 2022-11-7 -c ETH -p 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640
 ##############################
-def main():
+def load4console():
 
     start, end, chain_id,pool_id = common.load_param()
     if start == None or end == None or chain_id == None or pool_id == None:
@@ -61,5 +69,49 @@ def main():
     save_path = f"../demeter/data/{chain_id}/{pool_id}"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,str(chain_id),pool_id,save_path)
+
+
+def load_multiple_pool_data():
+    start = '2022-1-01'
+    end = '2022-11-13'
+
+    # eth
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_3000}"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'ETH',pool_id_1_eth_u_3000,save_path)
+
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'ETH',pool_id_1_eth_u_500,save_path)
+
+    # matic
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_eth_u_3000}"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'MATIC',pool_id_matic_eth_u_3000,save_path)
+
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_eth_u_500}"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'MATIC',pool_id_matic_eth_u_500,save_path)
+
+        # arb
+    save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_3000}"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'ARB',pool_id_arb_eth_u_3000,save_path)
+
+    save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_500}"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'ARB',pool_id_arb_eth_u_500,save_path)
+
+        # op
+    # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_3000}"
+    # Path(save_path).mkdir(parents=True, exist_ok=True)
+    # load(start,end,'OP',pool_id_op_eth_u_3000,save_path)
+
+    # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_500}"
+    # Path(save_path).mkdir(parents=True, exist_ok=True)
+    # load(start,end,'OP',pool_id_op_eth_u_500,save_path)
+
+
+
 if __name__ == '__main__':
-    main()
+    load_multiple_pool_data()
