@@ -11,15 +11,16 @@ def backtest_standard(alpha, ema_max_spread_rate):
     global RUNNING_TIME
     print(f"==================Standard running time {RUNNING_TIME}==================")
 
-    a = 1.25
-    hedge_spread_split = 3
-    hedge_spread_rate = 1
+    a = 1.2
+    hedge_spread_split = 2.3
+    hedge_spread_rate = 0.95
 
     decimal_a = Decimal(a).quantize(Decimal('0.00'))
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
-
+    alpha = round(alpha,4)
+    ema_max_spread_rate = round(ema_max_spread_rate,4)
 
     pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 
@@ -56,7 +57,7 @@ def backtest_standard(alpha, ema_max_spread_rate):
 
     final_total_eth_value = round(final_total_usdc_value / final_price,3)
 
-    notice = f"alpha/ema:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},ema:{alpha},ema_max_spread_rate:{ema_max_spread_rate}\n"
+    notice = f"alpha/ema:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpha:{alpha},ema_max_spread_rate:{ema_max_spread_rate}\n"
     result =f"result:ema_outside_count:{outside_ema_count} hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
     print(notice)
     print(result)
@@ -101,7 +102,7 @@ def backtest_standard(alpha, ema_max_spread_rate):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 10, 31)
+    DATE_START = date(2022, 9, 1)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
@@ -109,7 +110,7 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_standard,  num_evals=1,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.05])
+    opt = optunity.maximize(backtest_standard,  num_evals=200,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.05])
 
 
 
