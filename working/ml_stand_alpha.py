@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_standard,  num_evals=200,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.08])
+    opt = optunity.maximize(backtest_standard,  num_evals=300,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.08])
 
 
 
