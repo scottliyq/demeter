@@ -100,8 +100,8 @@ def backtest_standard(alpha, ema_max_spread_rate):
 # df
 
 if __name__ == "__main__":
-    NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 9, 1)
+    NET_VALUE_BASE = 'USDC'
+    DATE_START = date(2022, 8, 1)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_standard,  num_evals=200,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.05])
+    opt = optunity.maximize(backtest_standard,  num_evals=200,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.08])
 
 
 
