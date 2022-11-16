@@ -17,6 +17,9 @@ pool_id_arb_eth_u_500 = '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443'
 pool_id_op_eth_u_3000 = '0xb589969d38ce76d3d7aa319de7133bc9755fd840'
 pool_id_op_eth_u_500 = '0x85149247691df622eaf1a8bd0cafd40bc45154a9'
 
+pool_id_matic_matic_u_3000 = '0x88f3c15523544835ff6c738ddb30995339ad57d6'
+pool_id_matic_matic_u_500 = '0xa374094527e1673a86de625aa59517c5de346d32'
+
 # class ChainType(Enum):
 #     Ethereum = 1
 #     Polygon = 2
@@ -93,14 +96,23 @@ def load_multiple_pool_data():
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'MATIC',pool_id_matic_eth_u_500,save_path)
 
-        # arb
-    save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_3000}"
+    # matic/u in matic
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_matic_u_3000}"
     Path(save_path).mkdir(parents=True, exist_ok=True)
-    load(start,end,'ARB',pool_id_arb_eth_u_3000,save_path)
+    load(start,end,'MATIC',pool_id_matic_matic_u_3000,save_path)
 
-    save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_500}"
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_matic_u_500}"
     Path(save_path).mkdir(parents=True, exist_ok=True)
-    load(start,end,'ARB',pool_id_arb_eth_u_500,save_path)
+    load(start,end,'MATIC',pool_id_matic_matic_u_500,save_path)
+
+        # arb
+    # save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_3000}"
+    # Path(save_path).mkdir(parents=True, exist_ok=True)
+    # load(start,end,'ARB',pool_id_arb_eth_u_3000,save_path)
+
+    # save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_500}"
+    # Path(save_path).mkdir(parents=True, exist_ok=True)
+    # load(start,end,'ARB',pool_id_arb_eth_u_500,save_path)
 
         # op
     # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_3000}"

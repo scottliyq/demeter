@@ -54,7 +54,7 @@ def backtest_standard(alpha, ema_max_spread_rate):
     final_total_eth_value = round(final_total_usdc_value / final_price,3)
 
     notice = f"ema+alpha:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},ema rate:{ema_max_spread_rate}"
-    result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+    result =f" result: outside_ema_count:{outside_ema_count},hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
 
     # notice = f"alpha+ema:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpha:{alpha},ema_max_spread_rate:{ema_max_spread_rate}\n"
     # result =f"result:ema_outside_count:{outside_ema_count} hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
