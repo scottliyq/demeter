@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # profit  = backtest(120,30,80)
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_spread_boll,  num_evals=2,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[480, 1440])
+    opt = optunity.maximize(backtest_spread_boll,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[480, 1440])
 
 
 
