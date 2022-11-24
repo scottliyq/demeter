@@ -91,7 +91,7 @@ if __name__ == "__main__":
     ########################################
     # 优化完成，得到最优参数结果
     optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters(spread,alpha) :a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}, period_n={optimal_pars['period_n']}, from {str_date_start} to {str_date_end}"
+    result  = f"Optimal Parameters(spread,boll) :a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}, period_n={optimal_pars['period_n']}, from {str_date_start} to {str_date_end}"
     print(result)
     if SEND_NOTICE:
         send_notice('CEX_Notify',result)

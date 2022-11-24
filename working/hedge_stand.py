@@ -469,19 +469,30 @@ class HedgeSTBoll(HedgeST):
         future_amount = self.e.account[self.trade_symbol]['amount']
         spread = self.init_quote_number*2 -current_amount - future_amount
         symbol = self.trade_symbol
-        upper = Decimal(row_data.upper)
-        lower = Decimal(row_data.lower)
+        upper = Decimal(row_data.upper).quantize(Decimal('0.00'))
+        lower = Decimal(row_data.lower).quantize(Decimal('0.00'))
+        middle = Decimal(row_data.middle).quantize(Decimal('0.00'))
 
-        if price_pos > upper and spread > self.hedge_spread:
+        if price_pos >= upper and spread > self.hedge_spread:
             self.hedge_count += 1
             trade_amount = self.hedge_amount
             e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-            print(f"{row_data.timestamp} hedge buy {symbol}, upper:{upper},lower:,{lower} trade price:{price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
+            print(f"{row_data.timestamp} hedge up buy {symbol}, c_amount:{current_amount},f_amount:{future_amount},upper:{upper},middle:{middle},lower:,{lower}, trade price:{price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
         elif price_pos < lower and Decimal(-1)*self.hedge_spread >= spread:
             self.hedge_count += 1
             trade_amount = self.hedge_amount
             e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-            print(f"{row_data.timestamp } hedge sell {symbol}, upper:{upper},lower:,{lower}, trade price: {price},ema:{row_data.ema},trade amount: {trade_amount}, hedge count:{self.hedge_count}")
+            print(f"{row_data.timestamp } hedge lower sell {symbol},c_amount:{current_amount},f_amount:{future_amount}, upper:{upper},middle:{middle},lower,{lower}, trade price: {price},ema:{row_data.ema},trade amount: {trade_amount}, hedge count:{self.hedge_count}")
+        elif price_pos < upper and price_pos >= middle and Decimal(-1)*self.hedge_spread >= spread:
+            self.hedge_count += 1
+            trade_amount = self.hedge_amount
+            e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
+            print(f"{row_data.timestamp } hedge mid sell {symbol},c_amount:{current_amount},f_amount:{future_amount}, upper:{upper},middle:{middle},lower:,{lower}, trade price: {price},ema:{row_data.ema},trade amount: {trade_amount}, hedge count:{self.hedge_count}")
+        elif price_pos >= lower and price_pos < middle and spread > self.hedge_spread:
+            self.hedge_count += 1
+            trade_amount = self.hedge_amount
+            e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
+            print(f"{row_data.timestamp} hedge mid buy {symbol},c_amount:{current_amount},f_amount:{future_amount}, upper:{upper},middle:{middle},lower:,{lower}, trade price:{price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
 
         #处理跑出边界情况
         if current_amount == 0 or usdc_amount == 0:
@@ -491,12 +502,12 @@ class HedgeSTBoll(HedgeST):
                 self.hedge_count += 1
                 trade_amount = spread
                 e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                print(f"{row_data.timestamp} ema:{row_data.ema} => last hedge buy {symbol}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
+                print(f"{row_data.timestamp} c_amount:{current_amount},f_amount:{future_amount},ema:{row_data.ema} => last hedge buy {symbol}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
             elif spread < -1 * self.MIN_TRADE_AMOUNT:
                 self.hedge_count += 1
                 trade_amount = spread * -1
                 e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                print(f"{row_data.timestamp } ema:{row_data.ema} => last hedge sell {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
+                print(f"{row_data.timestamp } c_amount:{current_amount},f_amount:{future_amount},ema:{row_data.ema} => last hedge sell {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
 
 def backtest_boll(a, hedge_spread_split,hedge_spread_rate,boll_period_n):
     # global RUNNING_TIME
