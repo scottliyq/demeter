@@ -14,7 +14,9 @@ import optunity.metrics
 
 import os
 from dotenv import load_dotenv
-
+from talib.abstract import BBANDS
+import talib
+from load_data import pool_id_1_eth_u_500
 # import logging 
 # from logging import handlers
 
@@ -59,7 +61,7 @@ def ema(data: pd.Series, alpha:float) -> pd.Series:
     :rtype: Series
     """
     if data.size < 2:
-        raise ZelosError("not enough data for simple_moving_average")
+        raise Exception("not enough data for simple_moving_average")
     # timespan: Timedelta = data.index[1] - data.index[0]
     # if timespan.seconds % 60 != 0:
     #     return ZelosError("no seconds is allowed")
@@ -76,6 +78,30 @@ def ema(data: pd.Series, alpha:float) -> pd.Series:
 
     return prices_ema
 
+def bollband(data: pd.Series, n=1440) -> pd.Series:
+    """
+    calculate simple moving average
+
+    :param data: data
+    :type data: Series
+    :param n: window width, should set along with unit, eg: 5 hour, 2 minute
+    :type n: int
+    :param unit: unit of n, can be minute,hour,day
+    :type unit: TimeUnitEnum
+    :return: simple moving average data
+    :rtype: Series
+    """
+    print(data.size)
+    if data.size < 2:
+        raise Exception("not enough data for simple_moving_average")
+    
+    upper,middle,lower = talib.BBANDS(data,timeperiod=n,nbdevup=2, nbdevdn=2, matype=talib.MA_Type.T3)
+    
+    serial_upper = pd.Series(upper,index=data.index).fillna(0)
+    serial_middle = pd.Series(middle,index=data.index).fillna(0)
+    serial_lower = pd.Series(lower,index=data.index).fillna(0)
+
+    return serial_upper,serial_middle,serial_lower
 class Exchange:
 
 
@@ -185,11 +211,10 @@ class HedgeST(dt.Strategy):
     #     print(f"ema_max_spread_rate: {ema_max_spread_rate}")
     #     self.ema_max_spread_rate = ema_max_spread_rate
 
-    def __init__(self, a, hedge_spread_split,hedge_spread_rate,alpha=-1,ema_max_spread_rate=0,trade_symbol='ETH'):
+    def __init__(self, a, hedge_spread_split,hedge_spread_rate,alpha=-1,period_n=1440,trade_symbol='ETH'):
         super().__init__()
-        notice = f"init parameters: a:{a}, hedge_spread_split:{hedge_spread_split}, hedge_spread_rate:{hedge_spread_rate},alpa:{alpha},ema spread rate:{ema_max_spread_rate}\n"
+        notice = f"init parameters: a:{a}, hedge_spread_split:{hedge_spread_split}, hedge_spread_rate:{hedge_spread_rate},alpa:{alpha},period_n:{period_n}\n"
         print(notice)
-        self.ema_max_spread_rate = ema_max_spread_rate
         self.a = Decimal(a)
         self.trade_symbol = trade_symbol
         self.init_quote_number = 0
@@ -203,6 +228,7 @@ class HedgeST(dt.Strategy):
         self.up_price = 0
         self.down_price = 0
         self.alpha=alpha
+        self.period_n = int(period_n)
 
     def initialize(self):
         P0 = self.broker.pool_status.price
@@ -215,6 +241,13 @@ class HedgeST(dt.Strategy):
         else:
             self._add_column("ema", ema(prices,0.05))
         
+        # add boll band
+        upper,middle,lower = bollband(prices,self.period_n)
+        self._add_column("upper", upper)
+        self._add_column("middle", middle)
+        self._add_column("lower", lower)
+        # todo fill na with 0
+        self.data = self.data.fillna(0)
         future_init_net_value = status.net_value * Decimal(0.2)
         
         self.e = Exchange({self.trade_symbol},initial_balance=future_init_net_value,commission=0.00075,log=False)
@@ -423,24 +456,58 @@ def send_notice(event_name, text,text2=""):
  
     requests.request("POST", url, data=payload.encode('utf-8'), headers=headers)
 
-# if __name__ == "__main__":
-# a[105,125],hedge_spread_split[20,50], hedge_spread_rate[50,100]
-def backtest(a, hedge_spread_split,hedge_spread_rate):
-    global RUNNING_TIME
-    print(f"==================running time {RUNNING_TIME}==================")
+
+class HedgeSTBoll(HedgeST):
+    def next(self, row_data: Union[RowData, pd.Series]):
+        e = self.e
+        e.Update(row_data.timestamp,row_data.price)
+        price_pos = row_data.price
+        price = row_data.price
+
+        current_amount = self.broker.get_account_status(price_pos).quote_in_position
+        usdc_amount = self.broker.get_account_status(price_pos).base_in_position
+        future_amount = self.e.account[self.trade_symbol]['amount']
+        spread = self.init_quote_number*2 -current_amount - future_amount
+        symbol = self.trade_symbol
+        upper = Decimal(row_data.upper)
+        lower = Decimal(row_data.lower)
+
+        if price_pos > upper and spread > self.hedge_spread:
+            self.hedge_count += 1
+            trade_amount = self.hedge_amount
+            e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
+            print(f"{row_data.timestamp} hedge buy {symbol}, upper:{upper},lower:,{lower} trade price:{price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
+        elif price_pos < lower and Decimal(-1)*self.hedge_spread >= spread:
+            self.hedge_count += 1
+            trade_amount = self.hedge_amount
+            e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
+            print(f"{row_data.timestamp } hedge sell {symbol}, upper:{upper},lower:,{lower}, trade price: {price},ema:{row_data.ema},trade amount: {trade_amount}, hedge count:{self.hedge_count}")
+
+        #处理跑出边界情况
+        if current_amount == 0 or usdc_amount == 0:
+            # out of range, hedge at first
+
+            if spread > self.MIN_TRADE_AMOUNT:
+                self.hedge_count += 1
+                trade_amount = spread
+                e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
+                print(f"{row_data.timestamp} ema:{row_data.ema} => last hedge buy {symbol}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
+            elif spread < -1 * self.MIN_TRADE_AMOUNT:
+                self.hedge_count += 1
+                trade_amount = spread * -1
+                e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
+                print(f"{row_data.timestamp } ema:{row_data.ema} => last hedge sell {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
+
+def backtest_boll(a, hedge_spread_split,hedge_spread_rate,boll_period_n):
+    # global RUNNING_TIME
+    # print(f"==================spread running time {RUNNING_TIME}==================")
 
     decimal_a = Decimal(a).quantize(Decimal('0.00'))
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
-    print(f"backtest spread:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',f"{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}")
-
-    RUNNING_TIME +=1
-    pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
-
-    pool_id_tie3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
+    alpha = round(0.05,4)
+    ema_max_spread_rate = round(0.02,4)
 
     eth = TokenInfo(name="eth", decimal=18)
     usdc = TokenInfo(name="usdc", decimal=6)
@@ -451,51 +518,90 @@ def backtest(a, hedge_spread_split,hedge_spread_rate):
 
     runner_instance = Runner(pool)
     # runner_instance.enable_notify = False
-    runner_instance.strategy = HedgeST(decimal_a,decimal_hedge_spread_split,decimal_hedge_spread_rate)
+    runner_instance.strategy = HedgeSTBoll(a=decimal_a,hedge_spread_split=decimal_hedge_spread_split,hedge_spread_rate=decimal_hedge_spread_rate,alpha=alpha,period_n=boll_period_n)
     runner_instance.set_assets([Asset(usdc, 10000)])
-    runner_instance.data_path = "../demeter/data"
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    runner_instance.data_path = save_path
     runner_instance.load_data(ChainType.Ethereum.name,
-                                pool_id_tie500,
+                                pool_id_1_eth_u_500,
                                 DATE_START,
                                DATE_END)
     runner_instance.run(enable_notify=False)
 
-    df_status = pd.DataFrame(runner_instance.account_status_list)
+    hedge_count = runner_instance.strategy.hedge_count
+    outside_ema_count = runner_instance.strategy.outside_ema_count
+
+    # df_status = pd.DataFrame(runner_instance.account_status_list)
 
     total_net_value = runner_instance.final_status.net_value
     
-    final_total_usdc_value = total_net_value + runner_instance.strategy.e.df['total'].iloc[-1]
+    final_total_usdc_value = round(total_net_value + runner_instance.strategy.e.df['total'].iloc[-1],3)
     
     final_price = runner_instance.final_status.price
-    print(final_total_usdc_value)
-    if NET_VALUE_BASE == 'USDC':
-        print(final_total_usdc_value)
-        return float(final_total_usdc_value)
-        # profit_rate_usdc = profit_usdc / runner_instance.strategy.init_total_usdc
-    else:
-        print(float(final_total_usdc_value / final_price))
-        return float(final_total_usdc_value / final_price)
-        # profit_rate_eth = profit_eth / runner_instance.strategy.init_total_symbol
-# df_status
-# df
+
+    final_total_eth_value = round(final_total_usdc_value / final_price,3)
+
+    notice = f"ema+alpha:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},ema rate:{ema_max_spread_rate}"
+    result =f" result: outside_ema_count:{outside_ema_count},hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+    print(notice)
+    print(result)
+    # if SEND_NOTICE:
+    #     send_notice('CEX_Notify',notice)
+
+    # RUNNING_TIME +=1
+
+    # if NET_VALUE_BASE == 'USDC':
+    #     print(final_total_usdc_value)
+    #     return float(final_total_usdc_value)
+    #     # profit_rate_usdc = profit_usdc / runner_instance.strategy.init_total_usdc
+    # else:
+    #     print(float(final_total_usdc_value / final_price))
+    #     return float(final_total_usdc_value / final_price)
+
+
+    return runner_instance
 
 if __name__ == "__main__":
+    # NET_VALUE_BASE = 'ETH'
+    # DATE_START = date(2022, 10, 30)
+    # DATE_END = date(2022, 10, 31)
+    # RUNNING_TIME = 1
+    # SEND_NOTICE = True
+    # # profit  = backtest(120,30,80)
+    # # print(profit)
+    # # profit
+    # opt = optunity.maximize(backtest,  num_evals=200,solver_name='particle swarm', a=[1.12, 1.25], hedge_spread_split=[2, 3],hedge_spread_rate=[0.6, 1])
+
+
+
+    # ########################################
+    # # 优化完成，得到最优参数结果
+    # optimal_pars, details, _ = opt
+    # result  = f"Optimal Parameters:a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}"
+    # print(result)
+    # if SEND_NOTICE:
+    #     send_notice('CEX_Notify',result)
+
+    CHAIN_ID = 'ETH'
+    #POOL ID 500
+    POOL_ID = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
     NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 9, 15)
-    DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
-    SEND_NOTICE = True
-    # profit  = backtest(120,30,80)
-    # print(profit)
-    # profit
-    opt = optunity.maximize(backtest,  num_evals=200,solver_name='particle swarm', a=[1.12, 1.25], hedge_spread_split=[2, 3],hedge_spread_rate=[0.6, 1])
+    SEND_NOTICE = False
+    str_date_start = '2022-10-30'
+    str_date_end = '2022-10-31'
+
+    DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
+
+    DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
 
 
+    a = 1.20
+    hedge_spread_split = 2.3
+    hedge_spread_rate = 0.95
+    # alpha = 0.0586
+    # ema_max_spread_rate=0.027
+    period_n = 240
 
-    ########################################
-    # 优化完成，得到最优参数结果
-    optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters:a={optimal_pars['a']}, hedge_spread_split={optimal_pars['hedge_spread_split']}, hedge_spread_rate={optimal_pars['hedge_spread_rate']}"
-    print(result)
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',result)
+    instance1=backtest_boll(a,hedge_spread_split,hedge_spread_rate,period_n)
+
