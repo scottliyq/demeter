@@ -78,7 +78,7 @@ def ema(data: pd.Series, alpha:float) -> pd.Series:
 
     return prices_ema
 
-def bollband(data: pd.Series, n=1440) -> pd.Series:
+def bollband(data: pd.Series, n=24) -> pd.Series:
     """
     calculate simple moving average
 
@@ -94,12 +94,14 @@ def bollband(data: pd.Series, n=1440) -> pd.Series:
     print(data.size)
     if data.size < 2:
         raise Exception("not enough data for simple_moving_average")
+
+    resample_data = data.asfreq(freq=f"{n}h")
     
-    upper,middle,lower = talib.BBANDS(data,timeperiod=n,nbdevup=2, nbdevdn=2, matype=talib.MA_Type.T3)
+    upper,middle,lower = talib.BBANDS(resample_data,timeperiod=21,nbdevup=2, nbdevdn=2, matype=talib.MA_Type.T3)
     
-    serial_upper = pd.Series(upper,index=data.index).fillna(0)
-    serial_middle = pd.Series(middle,index=data.index).fillna(0)
-    serial_lower = pd.Series(lower,index=data.index).fillna(0)
+    serial_upper = pd.Series(upper,index=data.index).ffill().fillna(0)
+    serial_middle = pd.Series(middle,index=data.index).ffill().fillna(0)
+    serial_lower = pd.Series(lower,index=data.index).ffill().fillna(0)
 
     return serial_upper,serial_middle,serial_lower
 class Exchange:
@@ -206,12 +208,12 @@ class HedgeST(dt.Strategy):
     MIN_TRADE_AMOUNT = 0.01
     hedge_count = 0
     outside_ema_count = 0
-    # ema_max_spread_rate = 0
+    ema_max_spread_rate = 0
     # def set_ema_max_spread_rate(self, ema_max_spread_rate):
     #     print(f"ema_max_spread_rate: {ema_max_spread_rate}")
     #     self.ema_max_spread_rate = ema_max_spread_rate
 
-    def __init__(self, a, hedge_spread_split,hedge_spread_rate,alpha=-1,period_n=1440,trade_symbol='ETH'):
+    def __init__(self, a, hedge_spread_split,hedge_spread_rate,alpha=-1,ema_max_spread_rate=0.2,period_n=1440,trade_symbol='ETH'):
         super().__init__()
         notice = f"init parameters: a:{a}, hedge_spread_split:{hedge_spread_split}, hedge_spread_rate:{hedge_spread_rate},alpa:{alpha},period_n:{period_n}\n"
         print(notice)
@@ -229,6 +231,7 @@ class HedgeST(dt.Strategy):
         self.down_price = 0
         self.alpha=alpha
         self.period_n = int(period_n)
+        self.ema_max_spread_rate = ema_max_spread_rate
 
     def initialize(self):
         P0 = self.broker.pool_status.price
@@ -368,12 +371,12 @@ class HedgeST(dt.Strategy):
                     self.hedge_count += 1
                     trade_amount = spread
                     e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                    print(f"{row_data.timestamp} ema:{row_data.ema} => last hedge buy {symbol}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
+                    print(f"{row_data.timestamp} => last hedge buy {symbol},ema:{row_data.ema}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
                 elif spread < -1 * self.MIN_TRADE_AMOUNT:
                     self.hedge_count += 1
                     trade_amount = spread * -1
                     e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                    print(f"{row_data.timestamp } ema:{row_data.ema} => last hedge sell {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
+                    print(f"{row_data.timestamp } => last hedge sell,ema:{row_data.ema} {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
 
 
             if len(self.broker.positions) > 0:
@@ -462,6 +465,9 @@ class HedgeSTBoll(HedgeST):
         e = self.e
         e.Update(row_data.timestamp,row_data.price)
         price_pos = row_data.price
+        # todo ema for position price
+        if self.alpha==-1:
+            price_pos = Decimal(row_data.ema)
         price = row_data.price
 
         current_amount = self.broker.get_account_status(price_pos).quote_in_position
@@ -473,7 +479,7 @@ class HedgeSTBoll(HedgeST):
         lower = Decimal(row_data.lower).quantize(Decimal('0.00'))
         middle = Decimal(row_data.middle).quantize(Decimal('0.00'))
 
-        if price_pos >= upper and spread > self.hedge_spread:
+        if price_pos >= upper and upper > 0 and spread > self.hedge_spread:
             self.hedge_count += 1
             trade_amount = self.hedge_amount
             e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
@@ -502,12 +508,12 @@ class HedgeSTBoll(HedgeST):
                 self.hedge_count += 1
                 trade_amount = spread
                 e.Buy(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                print(f"{row_data.timestamp} c_amount:{current_amount},f_amount:{future_amount},ema:{row_data.ema} => last hedge buy {symbol}, price: {price},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
+                print(f"{row_data.timestamp}  => last hedge buy {symbol}, price: {price},c_amount:{current_amount},f_amount:{future_amount},ema:{row_data.ema}, trade amount:{trade_amount}, hedge count:{self.hedge_count}")
             elif spread < -1 * self.MIN_TRADE_AMOUNT:
                 self.hedge_count += 1
                 trade_amount = spread * -1
                 e.Sell(symbol, price, trade_amount, round(e.account[symbol]['realised_profit']+e.account[symbol]['unrealised_profit'],2))
-                print(f"{row_data.timestamp } c_amount:{current_amount},f_amount:{future_amount},ema:{row_data.ema} => last hedge sell {symbol},price: {price},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
+                print(f"{row_data.timestamp }  => last hedge sell {symbol},price: {price},c_amount:{current_amount},f_amount:{future_amount},ema:{row_data.ema}, trade amoutn: {trade_amount}, hedge count:{self.hedge_count}")
 
 def backtest_boll(a, hedge_spread_split,hedge_spread_rate,boll_period_n):
     # global RUNNING_TIME

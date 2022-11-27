@@ -15,12 +15,14 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
     decimal_a = Decimal(a).quantize(Decimal('0.00'))
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
+    alpha = round(0.037, 4)
+    ema_max_spread_rate = round(0.2,4)
 
     period_n = int(period_n)
 
     pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 
-    pool_id_tie3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
+
 
     eth = TokenInfo(name="eth", decimal=18)
     usdc = TokenInfo(name="usdc", decimal=6)
@@ -31,7 +33,7 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
     
     runner_instance = Runner(pool)
     # runner_instance.enable_notify = False
-    runner_instance.strategy = HedgeSTBoll(a=decimal_a,hedge_spread_split=decimal_hedge_spread_split,hedge_spread_rate=decimal_hedge_spread_rate,period_n=period_n)
+    runner_instance.strategy = HedgeSTBoll(a=decimal_a,hedge_spread_split=decimal_hedge_spread_split,hedge_spread_rate=decimal_hedge_spread_rate,alpha=alpha,ema_max_spread_rate=ema_max_spread_rate,period_n=period_n)
     runner_instance.set_assets([Asset(usdc, 10000)])
     save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
     runner_instance.data_path = save_path
@@ -75,7 +77,7 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    str_date_start = '2022-9-1'
+    str_date_start = '2022-10-25'
     str_date_end = '2022-10-31'
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     # profit  = backtest(120,30,80)
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_spread_boll,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[480, 1440])
+    opt = optunity.maximize(backtest_spread_boll,  num_evals=2,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[4, 24])
 
 
 
