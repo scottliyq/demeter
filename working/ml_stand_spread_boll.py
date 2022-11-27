@@ -77,7 +77,7 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    str_date_start = '2022-10-25'
+    str_date_start = '2022-8-1'
     str_date_end = '2022-10-31'
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # profit  = backtest(120,30,80)
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_spread_boll,  num_evals=2,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[4, 24])
+    opt = optunity.maximize(backtest_spread_boll,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[4, 24])
 
 
 
