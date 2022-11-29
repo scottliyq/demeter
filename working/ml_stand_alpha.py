@@ -5,30 +5,22 @@ from demeter import TokenInfo, PoolBaseInfo, Runner, Strategy, Asset, AccountSta
 import optunity
 import optunity.metrics
 from decimal import Decimal
+from load_data import pool_id_1_eth_u_500
 
-
-def backtest_alpha(alpha):
+def backtest_standard(alpha, ema_max_spread_rate):
     global RUNNING_TIME
-    print(f"==================ema alpha running time {RUNNING_TIME}==================")
+    print(f"==================Standard running time {RUNNING_TIME}==================")
 
     a = 1.2
-    hedge_spread_split = 3
-    hedge_spread_rate = 0.8
+    hedge_spread_split = 2.3
+    hedge_spread_rate = 0.95
 
     decimal_a = Decimal(a).quantize(Decimal('0.00'))
     decimal_hedge_spread_split = Decimal(hedge_spread_split).quantize(Decimal('0.0'))
     decimal_hedge_spread_rate = Decimal(hedge_spread_rate).quantize(Decimal('0.00'))
 
-    notice = f"alpha backtest {RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate}, alpha:{alpha}"
-
-    print(notice)
-    if SEND_NOTICE:
-        send_notice('CEX_Notify',notice)
-
-    RUNNING_TIME +=1
-    pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
-
-    pool_id_tie3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
+    alpha = round(alpha,4)
+    ema_max_spread_rate = round(ema_max_spread_rate,4)
 
     eth = TokenInfo(name="eth", decimal=18)
     usdc = TokenInfo(name="usdc", decimal=6)
@@ -39,20 +31,52 @@ def backtest_alpha(alpha):
 
     runner_instance = Runner(pool)
     # runner_instance.enable_notify = False
-    runner_instance.strategy = HedgeST(decimal_a,decimal_hedge_spread_split,decimal_hedge_spread_rate,alpha)
+    runner_instance.strategy = HedgeST(decimal_a,decimal_hedge_spread_split,decimal_hedge_spread_rate,alpha,ema_max_spread_rate)
     runner_instance.set_assets([Asset(usdc, 10000)])
-    runner_instance.data_path = "../demeter/data"
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    runner_instance.data_path = save_path
     runner_instance.load_data(ChainType.Ethereum.name,
-                                pool_id_tie500,
+                                pool_id_1_eth_u_500,
                                 DATE_START,
                                DATE_END)
     runner_instance.run(enable_notify=False)
 
+
     hedge_count = runner_instance.strategy.hedge_count
+    outside_ema_count = runner_instance.strategy.outside_ema_count
 
-    print(f"hedge count:{hedge_count}")
+    total_net_value = runner_instance.final_status.net_value
+    
+    final_total_usdc_value = round(total_net_value + runner_instance.strategy.e.df['total'].iloc[-1],3)
+    
+    final_price = runner_instance.final_status.price
 
-    return -1*hedge_count
+    final_total_eth_value = round(final_total_usdc_value / final_price,3)
+
+    notice = f"ema+alpha:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpa:{alpha},ema rate:{ema_max_spread_rate}"
+    result =f" result: outside_ema_count:{outside_ema_count},hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+
+    # notice = f"alpha+ema:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},alpha:{alpha},ema_max_spread_rate:{ema_max_spread_rate}\n"
+    # result =f"result:ema_outside_count:{outside_ema_count} hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+    print(notice)
+    print(result)
+    if SEND_NOTICE:
+        send_notice('CEX_Notify',notice + result)
+
+
+    RUNNING_TIME +=1
+
+    # return -1*hedge_count
+
+
+    if NET_VALUE_BASE == 'USDC':
+        print(final_total_usdc_value)
+        return float(final_total_usdc_value)
+        # profit_rate_usdc = profit_usdc / runner_instance.strategy.init_total_usdc
+    else:
+        print(float(final_total_usdc_value / final_price))
+        return float(final_total_usdc_value / final_price)
+        # profit_rate_eth = profit_eth / runner_instance.strategy.init_total_symbol
 
     # df_status = pd.DataFrame(runner_instance.account_status_list)
 
@@ -76,8 +100,8 @@ def backtest_alpha(alpha):
 # df
 
 if __name__ == "__main__":
-    NET_VALUE_BASE = 'ETH'
-    DATE_START = date(2022, 9, 1)
+    NET_VALUE_BASE = 'USDC'
+    DATE_START = date(2022, 10, 30)
     DATE_END = date(2022, 10, 31)
     RUNNING_TIME = 1
     SEND_NOTICE = True
@@ -85,14 +109,14 @@ if __name__ == "__main__":
 
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_alpha,  num_evals=200,solver_name='particle swarm', alpha=[0.005, 0.1])
+    opt = optunity.maximize(backtest_standard,  num_evals=10,solver_name='particle swarm', alpha=[0.008, 0.06], ema_max_spread_rate=[0.01, 0.08])
 
 
 
     # ########################################
     # # 优化完成，得到最优参数结果
     optimal_pars, details, _ = opt
-    result  = f"Optimal Parameters:alpha={optimal_pars['alpha']}"
+    result  = f"Optimal Parameters(ema_max_spread_rate):alpha={optimal_pars['alpha']}, ema_max_spread_rate={optimal_pars['ema_max_spread_rate']}"
     print(result)
     if SEND_NOTICE:
         send_notice('CEX_Notify',result)

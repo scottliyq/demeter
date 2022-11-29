@@ -4,10 +4,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .idea
-<<<<<<< HEAD
 .DS_Store
-=======
->>>>>>> 21e3fb82103c832eb2c0622d397832cae012eb6f
 # C extensions
 *.so
 zelos/.DS_Store
@@ -144,3 +141,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 .vscode/launch.json
+working/fig/*.*
