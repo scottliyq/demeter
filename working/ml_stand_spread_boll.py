@@ -77,7 +77,7 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    str_date_start = '2022-10-1'
+    str_date_start = '2022-8-1'
     str_date_end = '2022-10-31'
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
