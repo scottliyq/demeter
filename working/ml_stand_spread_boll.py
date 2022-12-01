@@ -1,6 +1,6 @@
 from hedge_stand import HedgeST,HedgeSTBoll,send_notice
 from datetime import date, datetime
-from demeter import TokenInfo, PoolBaseInfo, Runner, Strategy, Asset, AccountStatus, BuyAction, SellAction, RowData, \
+from demeter import TokenInfo, PoolBaseInfo, Actuator, Strategy, Asset, AccountStatus, BuyAction, SellAction, RowData, \
     ChainType
 import optunity
 import optunity.metrics
@@ -31,7 +31,7 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
     #收益计算基础参数
     # net_value_base = 'ETH'
     
-    runner_instance = Runner(pool)
+    runner_instance = Actuator(pool)
     # runner_instance.enable_notify = False
     runner_instance.strategy = HedgeSTBoll(a=decimal_a,hedge_spread_split=decimal_hedge_spread_split,hedge_spread_rate=decimal_hedge_spread_rate,alpha=alpha,ema_max_spread_rate=ema_max_spread_rate,period_n=period_n)
     runner_instance.set_assets([Asset(usdc, 10000)])
@@ -77,7 +77,7 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 
 if __name__ == "__main__":
     NET_VALUE_BASE = 'ETH'
-    str_date_start = '2022-8-1'
+    str_date_start = '2022-10-1'
     str_date_end = '2022-10-31'
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
