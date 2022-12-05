@@ -8,6 +8,9 @@ from decimal import Decimal
 import pandas as pd
 from load_data import pool_id_1_eth_u_500
 
+import quantstats as qs
+qs.extend_pandas()
+
 def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
     global RUNNING_TIME
     print(f"==================spread running time {RUNNING_TIME}==={period_n}===============")
@@ -55,8 +58,24 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 
     final_total_eth_value = round(final_total_usdc_value / final_price,3)
 
+
+    #处理df_status
+    e = runner_instance.strategy.e
+    df_status = pd.DataFrame(runner_instance.account_status_list)
+    df_merge = pd.merge(e.df, df_status, on='timestamp', how='inner')
+
+
+    df_merge['total_value'] = df_merge['total'] + df_merge['net_value']
+    df_merge['total_value_eth'] = df_merge['total_value'] / df_merge['price']
+
+    df_merge.set_index('timestamp', inplace=True)
+
+    sharp_usdc = df_merge['total_value'].astype(float).sharpe()
+
+    sharp_eth = df_merge['total_value_eth'].astype(float).sharpe()
+
     notice = f"spread+boll:{RUNNING_TIME} times, a:{decimal_a}, hedge_spread_split:{decimal_hedge_spread_split}, hedge_spread_rate:{decimal_hedge_spread_rate},boll period:{period_n}"
-    result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value}"  
+    result =f" result: hedge count:{hedge_count} final_total_eth_value:{final_total_eth_value},final_total_usdc_value:{final_total_usdc_value},sharp_usdc:{sharp_usdc},sharp_eth:{sharp_eth}"  
     print(notice)
     print(result)
     if SEND_NOTICE:
@@ -65,13 +84,17 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
     RUNNING_TIME +=1
 
     if NET_VALUE_BASE == 'USDC':
-        print(final_total_usdc_value)
-        return float(final_total_usdc_value)
+        # print(final_total_usdc_value)
+        # return float(final_total_usdc_value)
         # profit_rate_usdc = profit_usdc / runner_instance.strategy.init_total_usdc
+        print(f"sharp_usdc:{sharp_usdc}")
+        return sharp_usdc
     else:
-        print(float(final_total_usdc_value / final_price))
-        return float(final_total_usdc_value / final_price)
+        # print(float(final_total_usdc_value / final_price))
+        # return float(final_total_usdc_value / final_price)
         # profit_rate_eth = profit_eth / runner_instance.strategy.init_total_symbol
+        print(f"sharp_eth:{sharp_eth}")
+        return sharp_eth
 # df_status
 # df
 
@@ -86,7 +109,7 @@ if __name__ == "__main__":
     # profit  = backtest(120,30,80)
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_spread_boll,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 3],hedge_spread_rate=[0.75, 1],period_n=[4, 24])
+    opt = optunity.maximize(backtest_spread_boll,  num_evals=100,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 2.9],hedge_spread_rate=[0.75, 1],period_n=[4, 20])
 
 
 
