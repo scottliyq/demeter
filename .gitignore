@@ -142,3 +142,4 @@ dmypy.json
 cython_debug/
 .vscode/launch.json
 working/fig/*.*
+working/reports/*.*
