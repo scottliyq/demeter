@@ -6,7 +6,7 @@ import optunity
 import optunity.metrics
 from decimal import Decimal
 import pandas as pd
-from load_data import pool_id_1_eth_u_500
+from load_data import pool_id_1_eth_u_500,pool_id_1_wbtc_u_3000
 
 import quantstats as qs
 qs.extend_pandas()
@@ -23,25 +23,25 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 
     period_n = int(period_n)
 
-    pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
+    # pool_id_tie500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 
 
 
-    eth = TokenInfo(name="eth", decimal=18)
-    usdc = TokenInfo(name="usdc", decimal=6)
-    pool = PoolBaseInfo(usdc, eth, 0.05, usdc)
+    # eth = TokenInfo(name="eth", decimal=18)
+    # usdc = TokenInfo(name="usdc", decimal=6)
+    # pool = PoolBaseInfo(usdc, eth, 0.05, usdc)
 
     #收益计算基础参数
     # net_value_base = 'ETH'
     
-    runner_instance = Actuator(pool)
+    runner_instance = Actuator(PAIR_POOL)
     # runner_instance.enable_notify = False
     runner_instance.strategy = HedgeSTBoll(a=decimal_a,hedge_spread_split=decimal_hedge_spread_split,hedge_spread_rate=decimal_hedge_spread_rate,alpha=alpha,ema_max_spread_rate=ema_max_spread_rate,period_n=period_n)
-    runner_instance.set_assets([Asset(usdc, 10000)])
-    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    runner_instance.set_assets([Asset(USDC, 1000000)])
+    save_path = f"../demeter/data/ETH/{POOL_ID}"
     runner_instance.data_path = save_path
     runner_instance.load_data(ChainType.Ethereum.name,
-                                pool_id_tie500,
+                                POOL_ID,
                                 DATE_START,
                                DATE_END)
     runner_instance.run(enable_notify=False)
@@ -99,9 +99,20 @@ def backtest_spread_boll(a, hedge_spread_split,hedge_spread_rate,period_n):
 # df
 
 if __name__ == "__main__":
-    NET_VALUE_BASE = 'ETH'
-    str_date_start = '2022-8-1'
-    str_date_end = '2022-10-31'
+    NET_VALUE_BASE = 'WBTC'
+    POOL_ID = pool_id_1_wbtc_u_3000
+    #eth pool
+    # eth = TokenInfo(name='eth', decimal=18)
+    # USDC = TokenInfo(name="usdc", decimal=6)
+    # PAIR_POOL = PoolBaseInfo(USDC, eth, 0.05, USDC)
+
+    # wbtc pool
+    wbtc = TokenInfo(name='wbtc', decimal=8)
+    USDC = TokenInfo(name="usdc", decimal=6)
+    PAIR_POOL = PoolBaseInfo(wbtc, USDC, 0.3, USDC)
+
+    str_date_start = '2022-9-1'
+    str_date_end = '2022-11-30'
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
     RUNNING_TIME = 1
@@ -109,7 +120,7 @@ if __name__ == "__main__":
     # profit  = backtest(120,30,80)
     # print(profit)
     # profit
-    opt = optunity.maximize(backtest_spread_boll,  num_evals=200,solver_name='particle swarm', a=[1.16, 1.24], hedge_spread_split=[2.2, 2.9],hedge_spread_rate=[0.75, 1],period_n=[4, 20])
+    opt = optunity.maximize(backtest_spread_boll,  num_evals=1,solver_name='particle swarm', a=[1.1, 1.2], hedge_spread_split=[2.1, 2.9],hedge_spread_rate=[0.75, 1],period_n=[4, 20])
 
 
 
