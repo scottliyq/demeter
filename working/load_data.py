@@ -8,6 +8,8 @@ from pathlib import Path
 pool_id_1_eth_u_500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 pool_id_1_eth_u_3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
 
+pool_id_1_wbtc_u_3000 = '0x9a772018fbd77fcd2d25657e5c547baff3fd7d16'
+
 pool_id_matic_eth_u_3000 = '0x0e44ceb592acfc5d3f09d996302eb4c499ff8c10'
 pool_id_matic_eth_u_500 = '0x45dda9cb7c25131df268515131f647d726f50608'
 
@@ -48,11 +50,11 @@ def load(start,end,chain_id,pool_id,save_path):
         chain_type = ChainType.Optimism
 
     # ChainType.Ethereum,0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8,2022-01-01,2022-10-16,DataSource.BigQuery,./data
-    downloader.download_by_day(chain_type,
+    downloader.download_from_bigquery(chain_type,
                             pool_id,
                             start_date,
                             end_date,
-                            DataSource.BigQuery,
+                            # DataSource.BigQuery,
                             save_path)
 ###################################
 # main function
@@ -76,50 +78,55 @@ def load4console():
 
 def load_multiple_pool_data():
     start = '2022-1-01'
-    end = '2022-11-13'
+    end = '2022-12-17'
+
+    # wbtc
+    save_path = f"../demeter/data/ETH/{pool_id_1_wbtc_u_3000}/"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'ETH',pool_id_1_wbtc_u_3000,save_path)
 
     # eth
-    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_3000}"
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_3000}/"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'ETH',pool_id_1_eth_u_3000,save_path)
 
-    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}/"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'ETH',pool_id_1_eth_u_500,save_path)
 
     # matic
-    save_path = f"../demeter/data/MATIC/{pool_id_matic_eth_u_3000}"
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_eth_u_3000}/"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'MATIC',pool_id_matic_eth_u_3000,save_path)
 
-    save_path = f"../demeter/data/MATIC/{pool_id_matic_eth_u_500}"
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_eth_u_500}/"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'MATIC',pool_id_matic_eth_u_500,save_path)
 
     # matic/u in matic
-    save_path = f"../demeter/data/MATIC/{pool_id_matic_matic_u_3000}"
+    save_path = f"../demeter/data/MATIC/{pool_id_matic_matic_u_3000}/"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'MATIC',pool_id_matic_matic_u_3000,save_path)
 
-    save_path = f"../demeter/data/MATIC/{pool_id_matic_matic_u_500}"
-    Path(save_path).mkdir(parents=True, exist_ok=True)
-    load(start,end,'MATIC',pool_id_matic_matic_u_500,save_path)
+    # save_path = f"../demeter/data/MATIC/{pool_id_matic_matic_u_500}/"
+    # Path(save_path).mkdir(parents=True, exist_ok=True)
+    # load(start,end,'MATIC',pool_id_matic_matic_u_500,save_path)
 
         # arb
-    # save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_3000}"
+    # save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_3000}/"
     # Path(save_path).mkdir(parents=True, exist_ok=True)
     # load(start,end,'ARB',pool_id_arb_eth_u_3000,save_path)
 
-    # save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_500}"
+    # save_path = f"../demeter/data/ARB/{pool_id_arb_eth_u_500}/"
     # Path(save_path).mkdir(parents=True, exist_ok=True)
     # load(start,end,'ARB',pool_id_arb_eth_u_500,save_path)
 
         # op
-    # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_3000}"
+    # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_3000}/"
     # Path(save_path).mkdir(parents=True, exist_ok=True)
     # load(start,end,'OP',pool_id_op_eth_u_3000,save_path)
 
-    # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_500}"
+    # save_path = f"../demeter/data/OP/{pool_id_op_eth_u_500}/"
     # Path(save_path).mkdir(parents=True, exist_ok=True)
     # load(start,end,'OP',pool_id_op_eth_u_500,save_path)
 

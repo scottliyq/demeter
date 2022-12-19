@@ -16,7 +16,7 @@ import os
 from dotenv import load_dotenv
 from talib.abstract import BBANDS
 import talib
-from load_data import pool_id_1_eth_u_500
+from load_data import pool_id_1_eth_u_500,pool_id_1_wbtc_u_3000
 # import logging 
 # from logging import handlers
 
@@ -581,9 +581,9 @@ def backtest_boll(a, hedge_spread_split,hedge_spread_rate,boll_period_n):
     alpha = round(0.05,4)
     ema_max_spread_rate = round(0.02,4)
 
-    eth = TokenInfo(name="eth", decimal=18)
+    eth = TokenInfo(name="wbtc", decimal=8)
     usdc = TokenInfo(name="usdc", decimal=6)
-    pool = PoolBaseInfo(usdc, eth, 0.05, usdc)
+    pool = PoolBaseInfo(eth, usdc, 0.3, usdc)
 
     #收益计算基础参数
     # net_value_base = 'ETH'
@@ -592,13 +592,13 @@ def backtest_boll(a, hedge_spread_split,hedge_spread_rate,boll_period_n):
     # runner_instance.enable_notify = False
     runner_instance.strategy = HedgeSTBoll(a=decimal_a,hedge_spread_split=decimal_hedge_spread_split,hedge_spread_rate=decimal_hedge_spread_rate,alpha=alpha,period_n=boll_period_n)
     runner_instance.set_assets([Asset(usdc, 10000)])
-    save_path = f"../demeter/data/ETH/{pool_id_1_eth_u_500}"
+    save_path = f"../demeter/data/ETH/{POOL_ID}"
     runner_instance.data_path = save_path
     runner_instance.load_data(ChainType.Ethereum.name,
-                                pool_id_1_eth_u_500,
+                                POOL_ID,
                                 DATE_START,
                                DATE_END)
-    runner_instance.run(enable_notify=False)
+    runner_instance.run(enable_notify=True)
 
     hedge_count = runner_instance.strategy.hedge_count
     outside_ema_count = runner_instance.strategy.outside_ema_count
@@ -656,19 +656,19 @@ if __name__ == "__main__":
 
     CHAIN_ID = 'ETH'
     #POOL ID 500
-    POOL_ID = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
+    POOL_ID = pool_id_1_wbtc_u_3000
     NET_VALUE_BASE = 'ETH'
     RUNNING_TIME = 1
     SEND_NOTICE = False
-    str_date_start = '2022-10-1'
-    str_date_end = '2022-10-31'
+    str_date_start = '2022-9-27'
+    str_date_end = '2022-9-27'
 
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
 
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
 
 
-    a = 1.21
+    a = 1.01
     hedge_spread_split = 2.3
     hedge_spread_rate = 0.95
     # alpha = 0.0586
