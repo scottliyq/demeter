@@ -8,7 +8,8 @@ from pathlib import Path
 pool_id_1_eth_u_500 = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
 pool_id_1_eth_u_3000 = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8'
 
-pool_id_1_wbtc_u_3000 = '0x9a772018fbd77fcd2d25657e5c547baff3fd7d16'
+pool_id_1_wbtc_u_500 = '0x9a772018fbd77fcd2d25657e5c547baff3fd7d16'
+pool_id_1_wbtc_u_3000 = '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35'
 
 pool_id_matic_eth_u_3000 = '0x0e44ceb592acfc5d3f09d996302eb4c499ff8c10'
 pool_id_matic_eth_u_500 = '0x45dda9cb7c25131df268515131f647d726f50608'
@@ -78,9 +79,13 @@ def load4console():
 
 def load_multiple_pool_data():
     start = '2022-1-01'
-    end = '2022-12-17'
+    end = '2022-12-31'
 
     # wbtc
+    save_path = f"../demeter/data/ETH/{pool_id_1_wbtc_u_500}/"
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    load(start,end,'ETH',pool_id_1_wbtc_u_500,save_path)
+
     save_path = f"../demeter/data/ETH/{pool_id_1_wbtc_u_3000}/"
     Path(save_path).mkdir(parents=True, exist_ok=True)
     load(start,end,'ETH',pool_id_1_wbtc_u_3000,save_path)
