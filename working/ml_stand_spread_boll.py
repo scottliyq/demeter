@@ -111,8 +111,8 @@ if __name__ == "__main__":
     USDC = TokenInfo(name="usdc", decimal=6)
     PAIR_POOL = PoolBaseInfo(wbtc, USDC, 0.3, USDC)
 
-    str_date_start = '2022-9-1'
-    str_date_end = '2022-11-30'
+    str_date_start = '2022-6-1'
+    str_date_end = '2022-12-30'
     DATE_START = datetime.strptime(str_date_start, "%Y-%m-%d").date()
     DATE_END = datetime.strptime(str_date_end, "%Y-%m-%d").date()
     RUNNING_TIME = 1
